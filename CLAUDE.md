@@ -21,3 +21,9 @@ npm run lint     # Run ESLint
 ## Architecture
 
 This is a fresh Next.js App Router project. All pages and layouts live under `src/app/`. The entry point is `src/app/page.tsx` and the root layout is `src/app/layout.tsx`. Global styles are in `src/app/globals.css`.
+
+## IMPORTANT: Docs-First Development
+
+**Before generating any code**, you MUST first read and refer to the relevant documentation file(s) in the `/docs` directory. This applies to every code change, feature addition, or bug fix. The docs define the intended design, structure, and conventions for this project — generated code must align with them.
+
+- /docs/ui.md
