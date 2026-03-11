@@ -27,3 +27,4 @@ This is a fresh Next.js App Router project. All pages and layouts live under `sr
 **Before generating any code**, you MUST first read and refer to the relevant documentation file(s) in the `/docs` directory. This applies to every code change, feature addition, or bug fix. The docs define the intended design, structure, and conventions for this project — generated code must align with them.
 
 - /docs/ui.md
+- /docs/data-fetching.md

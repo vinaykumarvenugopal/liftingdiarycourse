@@ -1,36 +1,17 @@
-"use client";
-
-import { useState } from "react";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { DatePicker } from "./_components/DatePicker";
+import { getWorkoutsForDate } from "@/data/workouts";
 
-const MOCK_WORKOUTS = [
-  {
-    id: 1,
-    name: "Morning Push Session",
-    exercises: ["Bench Press", "Overhead Press", "Tricep Dips"],
-    duration: "52 min",
-  },
-  {
-    id: 2,
-    name: "Leg Day",
-    exercises: ["Squat", "Romanian Deadlift", "Leg Press"],
-    duration: "65 min",
-  },
-];
+interface DashboardPageProps {
+  searchParams: Promise<{ date?: string }>;
+}
 
-export default function DashboardPage() {
-  const [date, setDate] = useState<Date>(new Date());
+export default async function DashboardPage({ searchParams }: DashboardPageProps) {
+  const { date: dateParam } = await searchParams;
+  const date = dateParam ? new Date(`${dateParam}T00:00:00`) : new Date();
+
+  const workouts = await getWorkoutsForDate(date);
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
@@ -41,22 +22,7 @@ export default function DashboardPage() {
 
         {/* Date Picker */}
         <div className="mb-8">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="w-[220px] justify-start gap-2 text-left font-normal">
-                <CalendarIcon className="h-4 w-4 text-zinc-500" />
-                {format(date, "do MMM yyyy")}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={date}
-                onSelect={(d) => d && setDate(d)}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
+          <DatePicker selected={date} />
         </div>
 
         {/* Workout List */}
@@ -65,26 +31,37 @@ export default function DashboardPage() {
             Workouts for {format(date, "do MMM yyyy")}
           </h2>
 
-          {MOCK_WORKOUTS.length === 0 ? (
+          {workouts.length === 0 ? (
             <Card>
               <CardContent className="py-12 text-center text-sm text-zinc-500">
                 No workouts logged for this date.
               </CardContent>
             </Card>
           ) : (
-            MOCK_WORKOUTS.map((workout) => (
-              <Card key={workout.id}>
-                <CardHeader className="pb-2">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-base">{workout.name}</CardTitle>
-                    <span className="text-xs text-zinc-500">{workout.duration}</span>
-                  </div>
-                  <CardDescription>
-                    {workout.exercises.join(" · ")}
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-            ))
+            workouts.map((workout) => {
+              const duration =
+                workout.startedAt && workout.completedAt
+                  ? `${Math.round((workout.completedAt.getTime() - workout.startedAt.getTime()) / 60000)} min`
+                  : null;
+
+              return (
+                <Card key={workout.id}>
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-base">{workout.name ?? "Untitled Workout"}</CardTitle>
+                      {duration && (
+                        <span className="text-xs text-zinc-500">{duration}</span>
+                      )}
+                    </div>
+                    {workout.exercises.length > 0 && (
+                      <CardDescription>
+                        {workout.exercises.join(" · ")}
+                      </CardDescription>
+                    )}
+                  </CardHeader>
+                </Card>
+              );
+            })
           )}
         </div>
       </div>
