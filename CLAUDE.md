@@ -28,3 +28,7 @@ This is a fresh Next.js App Router project. All pages and layouts live under `sr
 
 - /docs/ui.md
 - /docs/data-fetching.md
+- /docs/auth.md
+- /docs/data-mutations.md
+- /docs/server-components.md
+- /docs/routing.md
