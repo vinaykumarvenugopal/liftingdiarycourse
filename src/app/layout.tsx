@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ClerkProvider, SignInButton, SignUpButton, Show, UserButton } from "@clerk/nextjs";
+import { Button } from "@/components/ui/button";
+import { ThemeProvider } from "@/components/ThemeProvider";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -24,24 +27,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <ThemeProvider>
         <ClerkProvider>
           <header className="flex items-center justify-between px-6 py-4 border-b border-zinc-200 dark:border-zinc-800">
             <span className="text-lg font-semibold tracking-tight">Lifting Diary</span>
             <div className="flex items-center gap-3">
+              <ThemeToggle />
               <Show when="signed-out">
-                <SignInButton mode="modal">
-                  <button className="px-4 py-2 text-sm font-medium rounded-lg border border-zinc-300 hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800 transition-colors">
-                    Sign In
-                  </button>
+                <SignInButton mode="modal" forceRedirectUrl="/dashboard">
+                  <Button variant="outline">Sign In</Button>
                 </SignInButton>
-                <SignUpButton mode="modal">
-                  <button className="px-4 py-2 text-sm font-medium rounded-lg bg-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200 transition-colors">
-                    Sign Up
-                  </button>
+                <SignUpButton mode="modal" forceRedirectUrl="/dashboard">
+                  <Button>Sign Up</Button>
                 </SignUpButton>
               </Show>
               <Show when="signed-in">
@@ -51,6 +52,7 @@ export default function RootLayout({
           </header>
           {children}
         </ClerkProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
