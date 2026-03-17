@@ -23,8 +23,8 @@ export default function NewWorkoutPage() {
     const startedAt = (form.elements.namedItem("startedAt") as HTMLInputElement).value;
 
     try {
-      await createWorkout({ name, startedAt });
-      router.push("/dashboard");
+      const { id } = await createWorkout({ name, startedAt });
+      router.push(`/dashboard/workout/${id}`);
     } catch (err) {
       setError("Something went wrong. Please try again.");
       setPending(false);

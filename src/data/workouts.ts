@@ -1,7 +1,7 @@
 import { db } from "@/db";
-import { exercises, workoutExercises, workouts } from "@/db/schema";
+import { exercises, sets, workoutExercises, workouts } from "@/db/schema";
 import { auth } from "@clerk/nextjs/server";
-import { and, desc, eq, gte, lt, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, lt, sql } from "drizzle-orm";
 
 const PAGE_SIZE = 5;
 
@@ -47,7 +47,7 @@ export async function getWorkoutsForDate(date: Date, page: number) {
         lt(workouts.startedAt, endOfDay)
       )
     )
-    .orderBy(desc(workouts.createdAt))
+    .orderBy(desc(workouts.startedAt))
     .limit(PAGE_SIZE)
     .offset(offset);
 
@@ -90,11 +90,16 @@ export async function insertWorkout(input: { name: string; startedAt: string }) 
     throw new Error("Unauthorized");
   }
 
-  await db.insert(workouts).values({
-    userId,
-    name: input.name,
-    startedAt: new Date(input.startedAt + "Z"),
-  });
+  const [inserted] = await db
+    .insert(workouts)
+    .values({
+      userId,
+      name: input.name,
+      startedAt: new Date(input.startedAt + "Z"),
+    })
+    .returning({ id: workouts.id });
+
+  return inserted;
 }
 
 export async function getWorkoutsGroupedByName(page: number) {
@@ -106,12 +111,13 @@ export async function getWorkoutsGroupedByName(page: number) {
 
   const offset = (page - 1) * PAGE_SIZE;
 
-  // Get distinct workout names (groups) with pagination
+  // Get distinct workout names (groups) ordered by most recently added workout
   const nameRows = await db
-    .selectDistinct({ name: workouts.name })
+    .select({ name: workouts.name })
     .from(workouts)
     .where(eq(workouts.userId, userId))
-    .orderBy(workouts.name)
+    .groupBy(workouts.name)
+    .orderBy(desc(sql`max(${workouts.createdAt})`))
     .limit(PAGE_SIZE)
     .offset(offset);
 
@@ -134,7 +140,7 @@ export async function getWorkoutsGroupedByName(page: number) {
         .leftJoin(workoutExercises, eq(workoutExercises.workoutId, workouts.id))
         .leftJoin(exercises, eq(exercises.id, workoutExercises.exerciseId))
         .where(and(eq(workouts.userId, userId), eq(workouts.name, name ?? "")))
-        .orderBy(desc(workouts.createdAt));
+        .orderBy(desc(workouts.startedAt));
 
       const workoutMap = new Map<
         number,
@@ -184,6 +190,83 @@ export async function getWorkoutById(workoutId: number) {
     .limit(1);
 
   return result[0] ?? null;
+}
+
+export type WorkoutExerciseWithSets = {
+  id: number;
+  order: number;
+  exercise: { id: number; name: string };
+  sets: Array<{
+    id: number;
+    setNumber: number;
+    reps: number | null;
+    weight: string | null;
+  }>;
+};
+
+export async function getWorkoutWithExercisesAndSets(workoutId: number) {
+  const { userId } = await auth();
+
+  if (!userId) {
+    throw new Error("Unauthorized");
+  }
+
+  const workoutRows = await db
+    .select()
+    .from(workouts)
+    .where(and(eq(workouts.id, workoutId), eq(workouts.userId, userId)))
+    .limit(1);
+
+  if (!workoutRows[0]) {
+    return null;
+  }
+
+  const workout = workoutRows[0];
+
+  const rows = await db
+    .select({
+      weId: workoutExercises.id,
+      weOrder: workoutExercises.order,
+      exerciseId: exercises.id,
+      exerciseName: exercises.name,
+      setId: sets.id,
+      setNumber: sets.setNumber,
+      reps: sets.reps,
+      weight: sets.weight,
+    })
+    .from(workoutExercises)
+    .innerJoin(exercises, eq(exercises.id, workoutExercises.exerciseId))
+    .leftJoin(sets, eq(sets.workoutExerciseId, workoutExercises.id))
+    .where(eq(workoutExercises.workoutId, workoutId))
+    .orderBy(asc(workoutExercises.order), asc(sets.setNumber));
+
+  const weMap = new Map<number, WorkoutExerciseWithSets>();
+  for (const row of rows) {
+    if (!weMap.has(row.weId)) {
+      weMap.set(row.weId, {
+        id: row.weId,
+        order: row.weOrder,
+        exercise: { id: row.exerciseId, name: row.exerciseName },
+        sets: [],
+      });
+    }
+    if (row.setId !== null) {
+      weMap.get(row.weId)!.sets.push({
+        id: row.setId,
+        setNumber: row.setNumber!,
+        reps: row.reps,
+        weight: row.weight,
+      });
+    }
+  }
+
+  return {
+    id: workout.id,
+    name: workout.name,
+    startedAt: workout.startedAt,
+    completedAt: workout.completedAt,
+    workoutExercises: Array.from(weMap.values()),
+  };
 }
 
 export async function updateWorkout(

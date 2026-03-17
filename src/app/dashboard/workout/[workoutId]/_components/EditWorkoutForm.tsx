@@ -45,8 +45,7 @@ export default function EditWorkoutForm({
   }
 
   return (
-    <div className="max-w-lg mx-auto py-10 px-4">
-      <Card>
+    <Card>
         <CardHeader>
           <CardTitle>Edit Workout</CardTitle>
         </CardHeader>
@@ -92,6 +91,5 @@ export default function EditWorkoutForm({
           </form>
         </CardContent>
       </Card>
-    </div>
   );
 }
