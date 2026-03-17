@@ -1,4 +1,5 @@
 import { format } from "date-fns";
+import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getWorkoutsGroupedByName } from "@/data/workouts";
 import { PaginationControls } from "./PaginationControls";
@@ -38,23 +39,25 @@ export async function WorkoutTypeView({ page }: WorkoutTypeViewProps) {
                     : null;
 
                 return (
-                  <Card key={workout.id}>
-                    <CardHeader className="pb-2">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-base">
-                          {workout.startedAt ? format(workout.startedAt, "do MMM yyyy") : "Unknown date"}
-                        </CardTitle>
-                        {duration && (
-                          <span className="text-xs text-zinc-500">{duration}</span>
+                  <Link key={workout.id} href={`/dashboard/workout/${workout.id}`} className="block">
+                    <Card className="hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors">
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-base">
+                            {workout.startedAt ? format(workout.startedAt, "do MMM yyyy") : "Unknown date"}
+                          </CardTitle>
+                          {duration && (
+                            <span className="text-xs text-zinc-500">{duration}</span>
+                          )}
+                        </div>
+                        {workout.exercises.length > 0 && (
+                          <CardDescription>
+                            {workout.exercises.join(" · ")}
+                          </CardDescription>
                         )}
-                      </div>
-                      {workout.exercises.length > 0 && (
-                        <CardDescription>
-                          {workout.exercises.join(" · ")}
-                        </CardDescription>
-                      )}
-                    </CardHeader>
-                  </Card>
+                      </CardHeader>
+                    </Card>
+                  </Link>
                 );
               })}
             </div>

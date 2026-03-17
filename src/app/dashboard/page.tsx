@@ -67,7 +67,36 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                         : null;
 
                     return (
-                      <Card key={workout.id}>
+                      <Link key={workout.id} href={`/dashboard/workout/${workout.id}`}>
+                        <Card className="hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors">
+                          <CardHeader className="pb-2">
+                            <div className="flex items-center justify-between">
+                              <CardTitle className="text-base">{workout.name ?? "Untitled Workout"}</CardTitle>
+                              {duration && (
+                                <span className="text-xs text-zinc-500">{duration}</span>
+                              )}
+                            </div>
+                            {workout.exercises.length > 0 && (
+                              <CardDescription>
+                                {workout.exercises.join(" · ")}
+                              </CardDescription>
+                            )}
+                          </CardHeader>
+                        </Card>
+                      </Link>
+                    );
+                  })}
+                </div>
+              ) : (
+                dateViewData.workouts.map((workout) => {
+                  const duration =
+                    workout.startedAt && workout.completedAt
+                      ? `${Math.round((workout.completedAt.getTime() - workout.startedAt.getTime()) / 60000)} min`
+                      : null;
+
+                  return (
+                    <Link key={workout.id} href={`/dashboard/workout/${workout.id}`} className="block">
+                      <Card className="hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors">
                         <CardHeader className="pb-2">
                           <div className="flex items-center justify-between">
                             <CardTitle className="text-base">{workout.name ?? "Untitled Workout"}</CardTitle>
@@ -82,32 +111,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                           )}
                         </CardHeader>
                       </Card>
-                    );
-                  })}
-                </div>
-              ) : (
-                dateViewData.workouts.map((workout) => {
-                  const duration =
-                    workout.startedAt && workout.completedAt
-                      ? `${Math.round((workout.completedAt.getTime() - workout.startedAt.getTime()) / 60000)} min`
-                      : null;
-
-                  return (
-                    <Card key={workout.id}>
-                      <CardHeader className="pb-2">
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="text-base">{workout.name ?? "Untitled Workout"}</CardTitle>
-                          {duration && (
-                            <span className="text-xs text-zinc-500">{duration}</span>
-                          )}
-                        </div>
-                        {workout.exercises.length > 0 && (
-                          <CardDescription>
-                            {workout.exercises.join(" · ")}
-                          </CardDescription>
-                        )}
-                      </CardHeader>
-                    </Card>
+                    </Link>
                   );
                 })
               )}

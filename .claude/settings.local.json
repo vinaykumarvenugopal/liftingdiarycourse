@@ -6,7 +6,8 @@
       "mcp__neon__run_sql",
       "Bash(cd C:/Vinay/Learning/liftingdiarycourse && npm install date-fns)",
       "Bash(cd C:/Vinay/Learning/liftingdiarycourse && npx shadcn@latest add button calendar popover card --yes)",
-      "mcp__neon__list_projects"
+      "mcp__neon__list_projects",
+      "Bash(cd:*)"
     ]
   },
   "enabledMcpjsonServers": [
